@@ -1,0 +1,15 @@
+{
+  "applinks": {
+    "details": [
+      {
+        "appIDs": ["N3MGA953Q6.chris.cho.DATStreamiOS"],
+        "components": [
+          {
+            "/": "/auth*",
+            "comment": "Universal link path used by Meta AI registration callback"
+          }
+        ]
+      }
+    ]
+  }
+}

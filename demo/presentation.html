@@ -1,0 +1,1117 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>FocusMate · CMSC730 Demo</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://api.fontshare.com/v2/css?f[]=clash-display@600,700&f[]=satoshi@400,500,700&display=swap" rel="stylesheet">
+<style>
+/* ===========================================
+   VIEWPORT FITTING: MANDATORY BASE
+   =========================================== */
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+html, body { height: 100%; overflow-x: hidden; }
+html { scroll-snap-type: y mandatory; scroll-behavior: smooth; }
+body {
+    background: var(--bg);
+    color: var(--ink);
+    font-family: 'Satoshi', system-ui, sans-serif;
+    -webkit-font-smoothing: antialiased;
+    line-height: 1.5;
+}
+
+.slide {
+    width: 100vw;
+    height: 100vh;
+    height: 100dvh;
+    overflow: hidden;
+    scroll-snap-align: start;
+    display: flex;
+    flex-direction: column;
+    position: relative;
+    isolation: isolate;
+}
+
+.slide-content {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    max-height: 100%;
+    overflow: hidden;
+    padding: var(--slide-padding);
+    position: relative;
+    z-index: 2;
+}
+
+:root {
+    /* Type scale */
+    --title-size: clamp(2.25rem, 7vw, 6rem);
+    --h1-size: clamp(1.75rem, 5vw, 4rem);
+    --h2-size: clamp(1.25rem, 3.5vw, 2.5rem);
+    --h3-size: clamp(1rem, 2.5vw, 1.5rem);
+    --body-size: clamp(0.85rem, 1.4vw, 1.125rem);
+    --small-size: clamp(0.7rem, 1vw, 0.85rem);
+    --mono-size: clamp(0.7rem, 1vw, 0.9rem);
+
+    --slide-padding: clamp(1.5rem, 4vw, 4rem);
+    --content-gap: clamp(0.75rem, 2vw, 2rem);
+    --element-gap: clamp(0.4rem, 1vw, 1rem);
+
+    /* Neon Cyber palette */
+    --bg: #060818;
+    --bg-soft: #0c1027;
+    --ink: #e6ecff;
+    --ink-soft: #8a93b8;
+    --cyan: #00f0ff;
+    --magenta: #ff3df0;
+    --violet: #6c5cff;
+    --lime: #b6ff5c;
+    --grid: rgba(108, 92, 255, 0.10);
+
+    --font-display: 'Clash Display', 'Satoshi', system-ui, sans-serif;
+    --font-body: 'Satoshi', system-ui, sans-serif;
+    --font-mono: ui-monospace, 'JetBrains Mono', 'SF Mono', Menlo, monospace;
+}
+
+/* Background grid + glow shared by all slides */
+.slide::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background-image:
+        linear-gradient(var(--grid) 1px, transparent 1px),
+        linear-gradient(90deg, var(--grid) 1px, transparent 1px);
+    background-size: clamp(40px, 4vw, 64px) clamp(40px, 4vw, 64px);
+    mask-image: radial-gradient(ellipse at center, black 30%, transparent 80%);
+    -webkit-mask-image: radial-gradient(ellipse at center, black 30%, transparent 80%);
+    z-index: 0;
+    pointer-events: none;
+}
+.slide::after {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background:
+        radial-gradient(ellipse 70% 60% at 15% 10%, rgba(0, 240, 255, 0.10), transparent 60%),
+        radial-gradient(ellipse 60% 50% at 85% 90%, rgba(255, 61, 240, 0.08), transparent 60%);
+    z-index: 1;
+    pointer-events: none;
+}
+
+/* Type styles */
+h1, h2, h3 { font-family: var(--font-display); font-weight: 700; line-height: 1.05; letter-spacing: -0.02em; }
+.eyebrow {
+    font-family: var(--font-mono);
+    font-size: var(--small-size);
+    letter-spacing: 0.18em;
+    text-transform: uppercase;
+    color: var(--cyan);
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5rem;
+}
+.eyebrow::before {
+    content: '';
+    display: inline-block;
+    width: clamp(8px, 1vw, 14px);
+    height: clamp(8px, 1vw, 14px);
+    background: var(--cyan);
+    border-radius: 999px;
+    box-shadow: 0 0 16px var(--cyan);
+}
+.title { font-size: var(--title-size); }
+h1 { font-size: var(--h1-size); }
+h2 { font-size: var(--h2-size); }
+h3 { font-size: var(--h3-size); }
+p, li { font-size: var(--body-size); color: var(--ink); }
+.muted { color: var(--ink-soft); }
+.mono { font-family: var(--font-mono); font-size: var(--mono-size); }
+
+.gradient-text {
+    background: linear-gradient(120deg, var(--cyan) 0%, var(--violet) 50%, var(--magenta) 100%);
+    -webkit-background-clip: text;
+    background-clip: text;
+    -webkit-text-fill-color: transparent;
+}
+
+/* Components */
+.tag {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.4em;
+    padding: 0.35em 0.75em;
+    border: 1px solid rgba(108, 92, 255, 0.4);
+    border-radius: 999px;
+    font-family: var(--font-mono);
+    font-size: var(--small-size);
+    letter-spacing: 0.1em;
+    color: var(--ink);
+    background: rgba(108, 92, 255, 0.08);
+}
+
+.card {
+    background: linear-gradient(180deg, rgba(255,255,255,0.04), rgba(255,255,255,0.01));
+    border: 1px solid rgba(108, 92, 255, 0.25);
+    border-radius: clamp(10px, 1.5vw, 18px);
+    padding: clamp(0.85rem, 1.6vw, 1.5rem);
+    backdrop-filter: blur(8px);
+    -webkit-backdrop-filter: blur(8px);
+    position: relative;
+    overflow: hidden;
+}
+.card::after {
+    content: '';
+    position: absolute;
+    inset: -1px;
+    border-radius: inherit;
+    padding: 1px;
+    background: linear-gradient(135deg, var(--cyan), transparent 30%, transparent 70%, var(--magenta));
+    -webkit-mask: linear-gradient(#000 0 0) content-box, linear-gradient(#000 0 0);
+    mask: linear-gradient(#000 0 0) content-box, linear-gradient(#000 0 0);
+    -webkit-mask-composite: xor;
+    mask-composite: exclude;
+    opacity: 0.5;
+    pointer-events: none;
+}
+.card .card-num {
+    font-family: var(--font-mono);
+    color: var(--cyan);
+    font-size: var(--small-size);
+    letter-spacing: 0.18em;
+}
+.card h3 { margin-top: 0.4rem; margin-bottom: 0.4rem; }
+.card p { color: var(--ink-soft); font-size: clamp(0.75rem, 1.2vw, 1rem); line-height: 1.5; }
+
+.grid-2 {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(min(100%, 240px), 1fr));
+    gap: clamp(0.6rem, 1.4vw, 1.1rem);
+}
+.grid-3 {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(min(100%, 220px), 1fr));
+    gap: clamp(0.6rem, 1.4vw, 1.1rem);
+}
+
+ul.bullets { list-style: none; display: flex; flex-direction: column; gap: clamp(0.4rem, 1vh, 0.8rem); }
+ul.bullets li {
+    position: relative;
+    padding-left: 1.6em;
+    line-height: 1.5;
+}
+ul.bullets li::before {
+    content: '▸';
+    color: var(--cyan);
+    position: absolute;
+    left: 0;
+    top: 0;
+    font-family: var(--font-mono);
+}
+
+/* Slide-specific layouts */
+.slide-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    gap: var(--content-gap);
+    margin-bottom: clamp(0.75rem, 2vh, 1.6rem);
+}
+.slide-title-row {
+    display: flex;
+    align-items: baseline;
+    justify-content: space-between;
+    gap: var(--content-gap);
+    margin-bottom: clamp(0.75rem, 2vh, 1.4rem);
+}
+
+/* Title slide hero */
+.hero {
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    height: 100%;
+    gap: clamp(0.6rem, 1.5vh, 1.4rem);
+}
+.hero .title {
+    line-height: 0.95;
+    letter-spacing: -0.04em;
+    font-weight: 700;
+}
+.hero-sub {
+    font-size: var(--h3-size);
+    color: var(--ink-soft);
+    max-width: 70ch;
+}
+.hero-meta {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.6rem;
+    margin-top: clamp(0.5rem, 1.5vh, 1.2rem);
+}
+
+/* Architecture diagram */
+.arch {
+    display: grid;
+    grid-template-columns: 1fr;
+    gap: clamp(0.5rem, 1.4vh, 1rem);
+    align-items: center;
+    height: 100%;
+}
+.arch-row {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: clamp(0.5rem, 1.5vw, 1rem);
+    align-items: stretch;
+}
+.arch-node {
+    background: linear-gradient(180deg, rgba(0, 240, 255, 0.06), rgba(108, 92, 255, 0.04));
+    border: 1px solid rgba(0, 240, 255, 0.35);
+    border-radius: clamp(10px, 1.4vw, 16px);
+    padding: clamp(0.7rem, 1.3vw, 1.1rem);
+    text-align: center;
+    position: relative;
+    overflow: hidden;
+}
+.arch-node.cloud {
+    border-color: rgba(255, 61, 240, 0.4);
+    background: linear-gradient(180deg, rgba(255, 61, 240, 0.07), rgba(108, 92, 255, 0.04));
+}
+.arch-node .label {
+    font-family: var(--font-mono);
+    font-size: var(--small-size);
+    letter-spacing: 0.12em;
+    color: var(--cyan);
+    text-transform: uppercase;
+}
+.arch-node.cloud .label { color: var(--magenta); }
+.arch-node h3 { font-size: clamp(0.95rem, 1.7vw, 1.4rem); margin: 0.3rem 0; }
+.arch-node p { color: var(--ink-soft); font-size: clamp(0.7rem, 1.1vw, 0.9rem); }
+.arch-arrow {
+    text-align: center;
+    color: var(--violet);
+    font-size: clamp(1rem, 2vw, 1.6rem);
+    font-family: var(--font-mono);
+}
+
+/* Stat blocks */
+.stats {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(min(100%, 180px), 1fr));
+    gap: clamp(0.6rem, 1.5vw, 1.2rem);
+}
+.stat .num {
+    font-family: var(--font-display);
+    font-size: clamp(1.8rem, 5vw, 3.5rem);
+    line-height: 1;
+    background: linear-gradient(120deg, var(--cyan), var(--magenta));
+    -webkit-background-clip: text;
+    background-clip: text;
+    -webkit-text-fill-color: transparent;
+}
+.stat .lbl {
+    margin-top: 0.4rem;
+    font-family: var(--font-mono);
+    font-size: var(--small-size);
+    letter-spacing: 0.14em;
+    color: var(--ink-soft);
+    text-transform: uppercase;
+}
+
+/* Code-ish blocks */
+.codeblock {
+    background: rgba(255, 255, 255, 0.02);
+    border: 1px solid rgba(108, 92, 255, 0.25);
+    border-radius: clamp(8px, 1.2vw, 14px);
+    padding: clamp(0.7rem, 1.4vw, 1.1rem);
+    font-family: var(--font-mono);
+    font-size: var(--mono-size);
+    color: var(--ink);
+    line-height: 1.6;
+    overflow: hidden;
+}
+.codeblock .k { color: var(--cyan); }
+.codeblock .m { color: var(--magenta); }
+.codeblock .c { color: var(--ink-soft); }
+.codeblock .v { color: var(--lime); }
+
+/* Pipeline diagram (gaze) */
+.pipeline {
+    display: grid;
+    grid-template-columns: repeat(5, 1fr);
+    gap: clamp(0.4rem, 1vw, 0.8rem);
+    align-items: stretch;
+}
+.pipeline-step {
+    background: rgba(108, 92, 255, 0.06);
+    border: 1px solid rgba(108, 92, 255, 0.3);
+    border-radius: clamp(8px, 1.2vw, 14px);
+    padding: clamp(0.6rem, 1.2vw, 1rem);
+    position: relative;
+}
+.pipeline-step .num {
+    font-family: var(--font-mono);
+    font-size: var(--small-size);
+    color: var(--magenta);
+    letter-spacing: 0.16em;
+}
+.pipeline-step h4 { font-family: var(--font-display); font-size: clamp(0.85rem, 1.4vw, 1.15rem); margin: 0.3rem 0; }
+.pipeline-step p { font-size: clamp(0.65rem, 1vw, 0.85rem); color: var(--ink-soft); line-height: 1.4; }
+
+/* HUD */
+.hud {
+    position: fixed;
+    bottom: clamp(0.8rem, 2vh, 1.5rem);
+    left: 0;
+    right: 0;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 0 clamp(1rem, 3vw, 2.5rem);
+    z-index: 100;
+    pointer-events: none;
+    font-family: var(--font-mono);
+    font-size: var(--small-size);
+    color: var(--ink-soft);
+    letter-spacing: 0.14em;
+    text-transform: uppercase;
+}
+.hud .index { color: var(--cyan); }
+.hud .progress-bar {
+    flex: 1;
+    margin: 0 clamp(0.6rem, 1.5vw, 1.2rem);
+    height: 2px;
+    background: rgba(108, 92, 255, 0.2);
+    position: relative;
+    overflow: hidden;
+}
+.hud .progress-bar::after {
+    content: '';
+    position: absolute;
+    inset: 0;
+    width: var(--progress, 0%);
+    background: linear-gradient(90deg, var(--cyan), var(--magenta));
+    transition: width 350ms ease;
+    box-shadow: 0 0 12px var(--cyan);
+}
+
+.kbd {
+    display: inline-block;
+    padding: 0.15em 0.45em;
+    border: 1px solid rgba(108, 92, 255, 0.4);
+    border-radius: 4px;
+    font-family: var(--font-mono);
+    font-size: 0.85em;
+    background: rgba(108, 92, 255, 0.08);
+}
+
+/* Reveal animations */
+.reveal { opacity: 0; transform: translateY(20px); transition: opacity 700ms ease, transform 700ms ease; }
+.reveal.in { opacity: 1; transform: translateY(0); }
+.reveal.delay-1 { transition-delay: 80ms; }
+.reveal.delay-2 { transition-delay: 160ms; }
+.reveal.delay-3 { transition-delay: 240ms; }
+.reveal.delay-4 { transition-delay: 320ms; }
+.reveal.delay-5 { transition-delay: 400ms; }
+.reveal.delay-6 { transition-delay: 480ms; }
+
+/* Scanline ambient motion */
+@keyframes scan {
+    0% { transform: translateY(-10%); }
+    100% { transform: translateY(110%); }
+}
+.scanline {
+    position: absolute;
+    left: 0;
+    right: 0;
+    height: clamp(80px, 12vh, 160px);
+    background: linear-gradient(180deg, transparent, rgba(0, 240, 255, 0.05), transparent);
+    pointer-events: none;
+    animation: scan 14s linear infinite;
+    z-index: 1;
+}
+
+/* Quote-style closing slides */
+.quote {
+    font-family: var(--font-display);
+    font-size: clamp(1.6rem, 4.5vw, 3.4rem);
+    line-height: 1.1;
+    max-width: 22ch;
+    letter-spacing: -0.02em;
+}
+
+/* Short height adjustments */
+@media (max-height: 700px) {
+    :root {
+        --slide-padding: clamp(1rem, 3vw, 2rem);
+        --content-gap: clamp(0.5rem, 1.5vw, 1rem);
+    }
+}
+@media (max-height: 600px) {
+    :root {
+        --title-size: clamp(1.6rem, 5vw, 3rem);
+        --h1-size: clamp(1.3rem, 3.5vw, 2.5rem);
+    }
+    .hud { font-size: 0.65rem; }
+}
+@media (max-width: 720px) {
+    .arch-row, .pipeline { grid-template-columns: 1fr; }
+}
+@media (prefers-reduced-motion: reduce) {
+    *, *::before, *::after {
+        animation-duration: 0.01ms !important;
+        transition-duration: 0.2s !important;
+    }
+    .scanline { animation: none; opacity: 0.3; }
+    html { scroll-behavior: auto; }
+}
+</style>
+</head>
+<body>
+
+<main>
+
+<!-- ============================================================
+     SLIDE 1 · TITLE
+     ============================================================ -->
+<section class="slide" data-slide="1">
+    <div class="scanline" style="animation-delay: 0s;"></div>
+    <div class="slide-content">
+        <div class="hero">
+            <div class="reveal"><span class="eyebrow">CMSC 730 · Demo Day · 2026</span></div>
+            <h1 class="title reveal delay-1">FocusMate<span class="gradient-text">.</span></h1>
+            <p class="hero-sub reveal delay-2">A wearable-driven focus monitor that fuses your first-person POV with your computer screen to detect when you've drifted — and gently pulls you back.</p>
+            <div class="hero-meta reveal delay-3">
+                <span class="tag">Ray-Ban Meta</span>
+                <span class="tag">WebRTC</span>
+                <span class="tag">macOS · YOLOv8n</span>
+                <span class="tag">Gemini 3 Flash</span>
+                <span class="tag">Raspberry Pi Turret</span>
+            </div>
+            <p class="muted mono reveal delay-4" style="margin-top: auto;">Christopher Cho · 2026-05-06</p>
+        </div>
+    </div>
+</section>
+
+<!-- ============================================================
+     SLIDE 2 · THE PROBLEM
+     ============================================================ -->
+<section class="slide" data-slide="2">
+    <div class="slide-content">
+        <div class="slide-title-row reveal">
+            <span class="eyebrow">01 · Problem</span>
+            <span class="mono muted">why focus is broken</span>
+        </div>
+        <h1 class="reveal delay-1">Knowing you're <span class="gradient-text">distracted</span> is the easy part. Catching it in time isn't.</h1>
+        <div class="grid-3" style="margin-top: clamp(1rem, 3vh, 2rem);">
+            <div class="card reveal delay-2">
+                <div class="card-num">01</div>
+                <h3>Self-report fails</h3>
+                <p>Pomodoro timers and to-do apps trust you to be honest with yourself. You aren't.</p>
+            </div>
+            <div class="card reveal delay-3">
+                <div class="card-num">02</div>
+                <h3>Screen alone is blind</h3>
+                <p>Time-tracking apps see your active window — not whether you're staring at the ceiling.</p>
+            </div>
+            <div class="card reveal delay-4">
+                <div class="card-num">03</div>
+                <h3>Eye-tracking is gated</h3>
+                <p>Real eye-tracking hardware is expensive, calibration-heavy, and lab-bound.</p>
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- ============================================================
+     SLIDE 3 · THE INSIGHT
+     ============================================================ -->
+<section class="slide" data-slide="3">
+    <div class="slide-content">
+        <div class="slide-title-row reveal">
+            <span class="eyebrow">02 · Insight</span>
+            <span class="mono muted">the wedge</span>
+        </div>
+        <h1 class="reveal delay-1">Smart glasses already <em>see what you see</em>.</h1>
+        <p class="hero-sub reveal delay-2" style="margin-top: clamp(0.6rem, 1.5vh, 1rem);">If we capture the first-person POV and compare it to what's on your laptop screen <strong>in real time</strong>, we can ask two questions a screen-only tool can't:</p>
+        <div class="grid-2" style="margin-top: clamp(1rem, 3vh, 1.6rem);">
+            <div class="card reveal delay-3">
+                <div class="card-num">Q1</div>
+                <h3>Are your eyes on the laptop?</h3>
+                <p class="muted">If your POV doesn't match the screen, you're looking somewhere else — phone, snack, daydream.</p>
+            </div>
+            <div class="card reveal delay-4">
+                <div class="card-num">Q2</div>
+                <h3>Is the screen on-task?</h3>
+                <p class="muted">An LLM checks the screen content against your stated goal. YouTube while writing a paper? Off-task.</p>
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- ============================================================
+     SLIDE 4 · THE SYSTEM (HIGH-LEVEL ARCH)
+     ============================================================ -->
+<section class="slide" data-slide="4">
+    <div class="slide-content">
+        <div class="slide-title-row reveal">
+            <span class="eyebrow">03 · System</span>
+            <span class="mono muted">four devices, one loop</span>
+        </div>
+        <h2 class="reveal delay-1">High-level architecture</h2>
+        <div class="arch reveal delay-2" style="margin-top: clamp(0.8rem, 2vh, 1.4rem);">
+            <div class="arch-row">
+                <div class="arch-node">
+                    <div class="label">Glasses</div>
+                    <h3>Ray-Ban Meta</h3>
+                    <p>Captures first-person video via the Meta Wearables DAT SDK.</p>
+                </div>
+                <div class="arch-node">
+                    <div class="label">Phone</div>
+                    <h3>iOS Relay App</h3>
+                    <p>Receives DAT video, encodes H.264, streams over WebRTC.</p>
+                </div>
+                <div class="arch-node">
+                    <div class="label">Mac</div>
+                    <h3>FocusMate App</h3>
+                    <p>Decodes frames, runs YOLO gaze + Gemini relevance, fires intervention.</p>
+                </div>
+            </div>
+            <div class="arch-arrow">▼</div>
+            <div class="arch-row">
+                <div class="arch-node cloud">
+                    <div class="label">Cloud</div>
+                    <h3>Gemini 3 Flash</h3>
+                    <p>Vision-LLM verdict on whether the screen is on-task or a known distraction surface.</p>
+                </div>
+                <div class="arch-node" style="border-color: rgba(182, 255, 92, 0.4);">
+                    <div class="label" style="color: var(--lime);">Intervention</div>
+                    <h3>Raspberry Pi Turret</h3>
+                    <p>On focus loss the Mac POSTs <span class="mono">/shoot</span>. Turret records a clip and serves it back over HTTP.</p>
+                </div>
+                <div class="arch-node">
+                    <div class="label">Output</div>
+                    <h3>HUD + Notification + Clip</h3>
+                    <p>Menu bar dot, a transition notification, and the turret clip displayed in-app once fully downloaded.</p>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- ============================================================
+     SLIDE 5 · DATA FLOW
+     ============================================================ -->
+<section class="slide" data-slide="5">
+    <div class="slide-content">
+        <div class="slide-title-row reveal">
+            <span class="eyebrow">04 · Data Flow</span>
+            <span class="mono muted">two streams converge</span>
+        </div>
+        <h2 class="reveal delay-1">How the signals meet on the Mac</h2>
+        <div class="grid-2" style="margin-top: clamp(0.8rem, 2vh, 1.4rem); align-items: stretch;">
+            <div class="card reveal delay-2">
+                <div class="card-num">Stream A · 6 fps</div>
+                <h3>POV camera frames</h3>
+                <p>Glasses → iOS → WebRTC → Mac → <span class="mono" style="color: var(--cyan);">GazeAnalyzer</span></p>
+                <p class="muted" style="margin-top: 0.5rem;">Decoded as <span class="mono">RTCVideoFrame</span>, processed at ~6 fps off the render thread. Streaming pipeline is untouched.</p>
+            </div>
+            <div class="card reveal delay-3">
+                <div class="card-num">Stream B · every 2s</div>
+                <h3>Display capture</h3>
+                <p>ScreenCaptureKit → <span class="mono" style="color: var(--magenta);">ScreenHashStore</span> + <span class="mono" style="color: var(--magenta);">RelevanceChecker</span></p>
+                <p class="muted" style="margin-top: 0.5rem;">Two outputs: a compact reference fingerprint for the gaze matcher, and a downscaled JPEG sent to Gemini every 15s.</p>
+            </div>
+        </div>
+        <div class="codeblock reveal delay-4" style="margin-top: clamp(0.8rem, 2vh, 1.4rem);">
+<span class="c">// FocusCoordinator merges the two signals</span>
+<span class="k">if</span> lookAwaySec &gt; <span class="v">3</span>            { state = .lookingAway }
+<span class="k">else if</span> screenVerdict.offTask  { state = .offTopic(reason) }
+<span class="k">else if</span> gaze == .onScreen     { state = .onTask }
+        </div>
+    </div>
+</section>
+
+<!-- ============================================================
+     SLIDE 6 · GAZE PIPELINE (DETAIL)
+     ============================================================ -->
+<section class="slide" data-slide="6">
+    <div class="slide-content">
+        <div class="slide-title-row reveal">
+            <span class="eyebrow">05 · Gaze Pipeline</span>
+            <span class="mono muted">the hard part</span>
+        </div>
+        <h2 class="reveal delay-1">"Is the user looking at a focus-work object?"</h2>
+        <p class="muted reveal delay-2" style="margin-top: 0.4rem;">Per camera frame, ~3 fps:</p>
+        <div class="pipeline reveal delay-3" style="margin-top: clamp(0.8rem, 2vh, 1.2rem);">
+            <div class="pipeline-step">
+                <div class="num">01</div>
+                <h4>YOLOv8n</h4>
+                <p>CoreML detector over the POV frame. Fast, lightweight, on-device.</p>
+            </div>
+            <div class="pipeline-step">
+                <div class="num">02</div>
+                <h4>Class filter</h4>
+                <p>Keep only focus classes: laptop, monitor, keyboard, mouse, book.</p>
+            </div>
+            <div class="pipeline-step">
+                <div class="num">03</div>
+                <h4>Confidence ≥ 0.22</h4>
+                <p>Tuned low — laptops at oblique/close angles often score 0.25–0.35.</p>
+            </div>
+            <div class="pipeline-step">
+                <div class="num">04</div>
+                <h4>Center-ROI overlap</h4>
+                <p>Bbox must put ≥12% of its area in the 60% center box: "the user is <em>looking at</em> it."</p>
+            </div>
+            <div class="pipeline-step">
+                <div class="num">05</div>
+                <h4>Asymmetric vote</h4>
+                <p>2-of-5 to flip ON, 5-of-5 to flip OFF. Glances don't trigger; sustained absence does.</p>
+            </div>
+        </div>
+        <p class="mono muted reveal delay-4" style="margin-top: clamp(0.7rem, 2vh, 1rem);">window=5 · ON=2 · OFF=5 &nbsp;|&nbsp; ~0.6s to engage, ~1.5s to disengage</p>
+    </div>
+</section>
+
+<!-- ============================================================
+     SLIDE 7 · RELEVANCE PIPELINE
+     ============================================================ -->
+<section class="slide" data-slide="7">
+    <div class="slide-content">
+        <div class="slide-title-row reveal">
+            <span class="eyebrow">06 · Relevance Pipeline</span>
+            <span class="mono muted">the LLM judge</span>
+        </div>
+        <h2 class="reveal delay-1">"Is what's on screen actually about my goal?"</h2>
+        <div class="grid-2" style="margin-top: clamp(0.8rem, 2vh, 1.4rem);">
+            <div class="card reveal delay-2">
+                <h3>Distraction-aware prompt</h3>
+                <ul class="bullets" style="margin-top: 0.5rem;">
+                    <li>Explicit OFF-TASK list: YouTube, TikTok, Twitter/X, Reddit, Netflix, news feeds, games.</li>
+                    <li>Anti-rationalization rule: a YouTube tutorial titled <em>"How to learn X"</em> is OFF-TASK — passive watching ≠ doing.</li>
+                    <li>Explicit ON-TASK list: IDE, terminal, docs, GitHub, Figma, notes about the goal.</li>
+                </ul>
+            </div>
+            <div class="codeblock reveal delay-3">
+<span class="c">// Strict-JSON prompt to Gemini 3 Flash</span>
+goal: <span class="v">"writing CMSC730 paper"</span>
+image: &lt;screenshot.jpg&gt;
+reply: <span class="m">{</span>
+  <span class="k">"surface"</span>: <span class="v">"YouTube watch page"</span>,
+  <span class="k">"on_task"</span>: <span class="v">false</span>,
+  <span class="k">"reason"</span>: <span class="v">"video feed unrelated to writing"</span>
+<span class="m">}</span>
+            </div>
+        </div>
+        <div class="grid-3 reveal delay-4" style="margin-top: clamp(0.7rem, 1.8vh, 1rem);">
+            <div class="card"><div class="card-num">Robustness</div><p>4-attempt exponential backoff on 429/500/503; transient errors don't pollute the UI.</p></div>
+            <div class="card"><div class="card-num">Cost</div><p>1 call / 15s = ~240 calls/hour. Flash pricing keeps a session under a few cents.</p></div>
+            <div class="card"><div class="card-num">Privacy</div><p>API key stays in <span class="mono">UserDefaults</span>; no screenshot leaves the device unless monitor is running.</p></div>
+        </div>
+    </div>
+</section>
+
+<!-- ============================================================
+     SLIDE 8 · STATE MACHINE
+     ============================================================ -->
+<section class="slide" data-slide="8">
+    <div class="slide-content">
+        <div class="slide-title-row reveal">
+            <span class="eyebrow">07 · Decision</span>
+            <span class="mono muted">FocusCoordinator</span>
+        </div>
+        <h2 class="reveal delay-1">Four states. One rule: gaze beats screen.</h2>
+        <div class="grid-2" style="margin-top: clamp(0.8rem, 2vh, 1.4rem);">
+            <div class="card reveal delay-2" style="border-color: rgba(182, 255, 92, 0.4);">
+                <div class="card-num" style="color: var(--lime);">.onTask</div>
+                <h3>Eyes on screen + screen relevant</h3>
+                <p>Menu bar dot is green. App stays out of the way.</p>
+            </div>
+            <div class="card reveal delay-3" style="border-color: rgba(255, 61, 240, 0.4);">
+                <div class="card-num" style="color: var(--magenta);">.lookingAway</div>
+                <h3>POV ≠ screen for &gt; N seconds</h3>
+                <p>Configurable timeout (default 3s for demo). Notification fires once on transition.</p>
+            </div>
+            <div class="card reveal delay-4" style="border-color: rgba(255, 61, 240, 0.4);">
+                <div class="card-num" style="color: var(--magenta);">.offTopic(reason)</div>
+                <h3>Screen content fails goal check</h3>
+                <p>Gemini's reason text is shown. User decides whether to refocus or update goal.</p>
+            </div>
+            <div class="card reveal delay-5" style="border-color: rgba(138, 147, 184, 0.4);">
+                <div class="card-num muted">.unknown</div>
+                <h3>Insufficient evidence</h3>
+                <p>Cold start, missing API key, or fingerprint loop hasn't filled. Stays neutral.</p>
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- ============================================================
+     SLIDE 8.5 · THE TURRET
+     ============================================================ -->
+<section class="slide" data-slide="9">
+    <div class="slide-content">
+        <div class="slide-title-row reveal">
+            <span class="eyebrow">08 · Intervention</span>
+            <span class="mono muted">the turret loop</span>
+        </div>
+        <h2 class="reveal delay-1">When focus breaks, the turret <span class="gradient-text">shoots back</span>.</h2>
+        <p class="muted reveal delay-2" style="margin-top: 0.4rem;">A Raspberry Pi sits on the desk with a camera. On every transition out of <span class="mono">.onTask</span>, the Mac fires a one-line HTTP trigger; a few seconds later a clip lands in the app.</p>
+
+        <div class="pipeline reveal delay-3" style="margin-top: clamp(0.8rem, 2vh, 1.2rem); grid-template-columns: repeat(4, 1fr);">
+            <div class="pipeline-step">
+                <div class="num">01</div>
+                <h4>Trigger</h4>
+                <p><span class="mono">POST http://turret.local:8787/shoot</span> on focus loss.</p>
+            </div>
+            <div class="pipeline-step">
+                <div class="num">02</div>
+                <h4>Pi records</h4>
+                <p>Few-second MP4 (H.264) of the user. Hosted at <span class="mono">/last_clip.mp4</span>.</p>
+            </div>
+            <div class="pipeline-step">
+                <div class="num">03</div>
+                <h4>Mac pulls</h4>
+                <p>Polls HEAD until Content-Length stabilizes — file is fully written.</p>
+            </div>
+            <div class="pipeline-step">
+                <div class="num">04</div>
+                <h4>Show</h4>
+                <p><span class="mono">AVKit</span> player appears in-app <em>only after</em> the clip is fully on disk.</p>
+            </div>
+        </div>
+
+        <div class="grid-3 reveal delay-4" style="margin-top: clamp(0.7rem, 1.8vh, 1rem);">
+            <div class="card"><div class="card-num">Pull, not push</div><p>No inbound listener on the Mac, no Local Network entitlement, no firewall prompt.</p></div>
+            <div class="card"><div class="card-num">Stable-size gate</div><p>Two consecutive HEADs with the same length → file done. Avoids partial reads.</p></div>
+            <div class="card"><div class="card-num">Single source</div><p>Both real focus loss and a manual <em>Test /shoot</em> button drive the same fetch path.</p></div>
+        </div>
+    </div>
+</section>
+
+<!-- ============================================================
+     SLIDE 9 · UNDER THE HOOD (MODULE MAP)
+     ============================================================ -->
+<section class="slide" data-slide="10">
+    <div class="slide-content">
+        <div class="slide-title-row reveal">
+            <span class="eyebrow">09 · Implementation</span>
+            <span class="mono muted">Swift modules</span>
+        </div>
+        <h2 class="reveal delay-1">DATStreamMac · the Focus subsystem</h2>
+        <div class="codeblock reveal delay-2" style="margin-top: clamp(0.8rem, 2vh, 1.2rem);">
+<span class="c">macOS/DATStreamMac/DATStreamMac/</span>
+├─ RTC/                            <span class="c">// existing — UNTOUCHED streaming</span>
+├─ ContentView.swift               <span class="c">// + turret clip card (AVKit player)</span>
+└─ Focus/
+   ├─ <span class="k">FocusCoordinator.swift</span>      <span class="c">// orchestrator, @Observable</span>
+   ├─ <span class="k">FocusState.swift</span>            <span class="c">// .onTask | .lookingAway | .offTopic | .unknown</span>
+   ├─ <span class="k">GazeAnalyzer.swift</span>          <span class="c">// YOLOv8n CoreML + asymmetric voting</span>
+   ├─ <span class="m">ScreenRelevanceChecker.swift</span> <span class="c">// SCKit screenshot loop → Gemini</span>
+   ├─ <span class="m">GeminiClient.swift</span>          <span class="c">// REST + retry/backoff, distraction prompt</span>
+   ├─ <span class="k">FocusNotifier.swift</span>         <span class="c">// NSStatusItem + UNNotifications + /shoot POST</span>
+   └─ <span class="k">TurretClipFetcher.swift</span>     <span class="c">// HEAD-poll + download → @Observable clip URL</span>
+        </div>
+        <div class="grid-3 reveal delay-3" style="margin-top: clamp(0.7rem, 1.8vh, 1rem);">
+            <div class="card"><div class="card-num">CoreML YOLO</div><p>Replaced the heuristic NCC+featureprint stack with one YOLOv8n model + voting.</p></div>
+            <div class="card"><div class="card-num">0 SDK deps</div><p>Apple frameworks + Gemini REST + a single bundled <span class="mono">yolov8n.mlpackage</span>.</p></div>
+            <div class="card"><div class="card-num">Streaming intact</div><p>Gaze still attaches as a 2nd <span class="mono">RTCVideoRenderer</span>; WebRTC pipeline untouched.</p></div>
+        </div>
+    </div>
+</section>
+
+<!-- ============================================================
+     SLIDE 10 · LIVE DEMO
+     ============================================================ -->
+<section class="slide" data-slide="11">
+    <div class="slide-content">
+        <div class="slide-title-row reveal">
+            <span class="eyebrow">10 · Demo</span>
+            <span class="mono muted">live</span>
+        </div>
+        <h1 class="reveal delay-1"><span class="gradient-text">Live demo.</span></h1>
+        <p class="hero-sub reveal delay-2" style="margin-top: clamp(0.6rem, 1.5vh, 1rem);">Four scripted transitions:</p>
+        <div class="grid-2 reveal delay-3" style="margin-top: clamp(0.8rem, 2vh, 1.4rem);">
+            <div class="card">
+                <div class="card-num" style="color: var(--lime);">SCENE 1</div>
+                <h3>Locked in</h3>
+                <p>Goal: "writing the project paper." Eyes on the doc → YOLO finds <span class="mono">laptop</span> in center, dot stays green.</p>
+            </div>
+            <div class="card">
+                <div class="card-num" style="color: var(--magenta);">SCENE 2</div>
+                <h3>Look away</h3>
+                <p>I glance off-screen. After ~1.5s of consistent absence, votes flip OFF, dot turns red.</p>
+            </div>
+            <div class="card">
+                <div class="card-num" style="color: var(--magenta);">SCENE 3</div>
+                <h3>Off task</h3>
+                <p>Open YouTube. Gemini's distraction prompt flags it as a watch page; dot turns red with a reason.</p>
+            </div>
+            <div class="card">
+                <div class="card-num" style="color: var(--lime);">SCENE 4</div>
+                <h3>Turret intervention</h3>
+                <p>Each transition POSTs <span class="mono">/shoot</span>. A few seconds later the turret clip appears in-app.</p>
+            </div>
+        </div>
+        <p class="mono muted reveal delay-4" style="margin-top: clamp(1rem, 2.5vh, 1.6rem);">Watch the debug HUD: <span style="color: var(--cyan)">FOCUS laptop conf=…</span> · <span style="color: var(--magenta)">votes=N+/N-</span> · <span style="color: var(--ink)">surface from Gemini</span>.</p>
+    </div>
+</section>
+
+<!-- ============================================================
+     SLIDE 11 · ENGINEERING NOTES
+     ============================================================ -->
+<section class="slide" data-slide="12">
+    <div class="slide-content">
+        <div class="slide-title-row reveal">
+            <span class="eyebrow">11 · Hard Parts</span>
+            <span class="mono muted">honest tradeoffs</span>
+        </div>
+        <h2 class="reveal delay-1">Things that didn't work — and why we changed them</h2>
+        <div class="grid-2" style="margin-top: clamp(0.8rem, 2vh, 1.4rem);">
+            <div class="card reveal delay-2">
+                <div class="card-num">v1 — heuristic rectangles</div>
+                <h3>Edge detection + luminance gates</h3>
+                <p>Rejected smooth walls but mistook picture frames and doors for screens. Tunable but brittle.</p>
+            </div>
+            <div class="card reveal delay-3">
+                <div class="card-num">v2 — content matching</div>
+                <h3>NCC + Vision featureprint vs. live display</h3>
+                <p>Worked when the screen filled the frame. Failed at typing distance and on bright hallways (smooth → unstable similarity).</p>
+            </div>
+            <div class="card reveal delay-4">
+                <div class="card-num">v3 — current</div>
+                <h3>YOLOv8n + center-ROI + asymmetric vote</h3>
+                <p>One CoreML detector replaces the entire stack. Knows what a laptop <em>is</em>, not just what a screen <em>looks like</em>. Vote bias makes it forgiving without being naive.</p>
+            </div>
+            <div class="card reveal delay-5">
+                <div class="card-num">screen judge</div>
+                <h3>Strict → forgiving → distraction-aware</h3>
+                <p>v1 prompt was too strict (flagged research as off-task). v2 was too lenient (let YouTube pass). v3 names distraction surfaces explicitly.</p>
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- ============================================================
+     SLIDE 12 · LIMITATIONS
+     ============================================================ -->
+<section class="slide" data-slide="13">
+    <div class="slide-content">
+        <div class="slide-title-row reveal">
+            <span class="eyebrow">12 · Limitations</span>
+            <span class="mono muted">where it breaks</span>
+        </div>
+        <h2 class="reveal delay-1">Honest limits of v1</h2>
+        <div class="grid-2" style="margin-top: clamp(0.8rem, 2vh, 1.4rem);">
+            <div class="card reveal delay-2">
+                <div class="card-num">L1</div>
+                <h3>POV coverage</h3>
+                <p>If the camera FOV barely sees the screen, similarity is weak regardless of pipeline.</p>
+            </div>
+            <div class="card reveal delay-3">
+                <div class="card-num">L2</div>
+                <h3>Multi-monitor users</h3>
+                <p>Currently fingerprints only the primary display. Looking at a second monitor reads as "looking away."</p>
+            </div>
+            <div class="card reveal delay-4">
+                <div class="card-num">L3</div>
+                <h3>LLM cost &amp; latency</h3>
+                <p>15s polling is a tradeoff. Lower → costs grow + 503s. Higher → user can drift unseen.</p>
+            </div>
+            <div class="card reveal delay-5">
+                <div class="card-num">L4</div>
+                <h3>Privacy surface</h3>
+                <p>Screen pixels leave the device when checking relevance. Documented; never default-on.</p>
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- ============================================================
+     SLIDE 13 · FUTURE WORK
+     ============================================================ -->
+<section class="slide" data-slide="14">
+    <div class="slide-content">
+        <div class="slide-title-row reveal">
+            <span class="eyebrow">13 · Future Work</span>
+            <span class="mono muted">v2 wishlist</span>
+        </div>
+        <h2 class="reveal delay-1">Where this goes next</h2>
+        <div class="grid-2" style="margin-top: clamp(0.8rem, 2vh, 1.4rem);">
+            <div class="card reveal delay-2">
+                <div class="card-num">F1</div>
+                <h3>On-device LLM</h3>
+                <p>Apple FoundationModels for the screen-relevance check — faster, free, private.</p>
+            </div>
+            <div class="card reveal delay-3">
+                <div class="card-num">F2</div>
+                <h3>True gaze estimation</h3>
+                <p>Use the glasses' eye-tracking when SDK exposes it. POV → actual gaze vector.</p>
+            </div>
+            <div class="card reveal delay-4">
+                <div class="card-num">F3</div>
+                <h3>Goal coaching</h3>
+                <p>"You drift after 22 minutes on average — want a break?" Patterns over a session.</p>
+            </div>
+            <div class="card reveal delay-5">
+                <div class="card-num">F4</div>
+                <h3>Multi-display + multi-window</h3>
+                <p>Per-display fingerprints. Per-app context. Better off-task verdicts.</p>
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- ============================================================
+     SLIDE 14 · CLOSE
+     ============================================================ -->
+<section class="slide" data-slide="15">
+    <div class="scanline" style="animation-delay: 4s;"></div>
+    <div class="slide-content">
+        <div class="hero">
+            <div class="reveal"><span class="eyebrow">CMSC 730 · 2026 · End</span></div>
+            <p class="quote reveal delay-1">Glasses see <span class="gradient-text">what you see</span>. Software notices when it shouldn't be that.</p>
+            <div class="reveal delay-3" style="margin-top: clamp(1rem, 3vh, 2rem);">
+                <p class="muted">Christopher Cho · DATStream / FocusMate · 2026-05-06</p>
+                <p class="mono muted" style="margin-top: 0.4rem;">github.com/cmsc730 · ivanwang@terpmail.umd.edu</p>
+            </div>
+            <div class="reveal delay-4" style="margin-top: clamp(1rem, 2.5vh, 1.5rem);">
+                <span class="tag">Q&amp;A</span>
+                <span class="tag">Demo</span>
+                <span class="tag">Discussion</span>
+            </div>
+        </div>
+    </div>
+</section>
+
+</main>
+
+<!-- HUD -->
+<div class="hud" aria-hidden="true">
+    <span><span class="index" id="hud-index">01</span> / <span id="hud-total">14</span></span>
+    <div class="progress-bar" id="progress-bar"></div>
+    <span><span class="kbd">↑↓</span> · <span class="kbd">space</span></span>
+</div>
+
+<script>
+/**
+ * Presentation controller.
+ * Handles keyboard, wheel, touch navigation, plus IntersectionObserver-based
+ * reveal animations.
+ */
+class Presentation {
+    constructor() {
+        this.slides = Array.from(document.querySelectorAll('.slide'));
+        this.total = this.slides.length;
+        this.current = 0;
+        this.locked = false;
+
+        this.hudIndex = document.getElementById('hud-index');
+        this.hudTotal = document.getElementById('hud-total');
+        this.progressBar = document.getElementById('progress-bar');
+        if (this.hudTotal) this.hudTotal.textContent = String(this.total).padStart(2, '0');
+
+        this.bindKeys();
+        this.bindWheel();
+        this.bindTouch();
+        this.bindObserver();
+        this.update();
+    }
+
+    goTo(index) {
+        const next = Math.max(0, Math.min(this.total - 1, index));
+        if (next === this.current) return;
+        this.current = next;
+        this.slides[next].scrollIntoView({ behavior: 'smooth', block: 'start' });
+        this.update();
+    }
+
+    update() {
+        if (this.hudIndex) this.hudIndex.textContent = String(this.current + 1).padStart(2, '0');
+        if (this.progressBar) {
+            const pct = ((this.current + 1) / this.total) * 100;
+            this.progressBar.style.setProperty('--progress', `${pct}%`);
+        }
+    }
+
+    bindKeys() {
+        document.addEventListener('keydown', (e) => {
+            switch (e.key) {
+                case 'ArrowDown':
+                case 'ArrowRight':
+                case 'PageDown':
+                case ' ':
+                    e.preventDefault();
+                    this.goTo(this.current + 1);
+                    break;
+                case 'ArrowUp':
+                case 'ArrowLeft':
+                case 'PageUp':
+                    e.preventDefault();
+                    this.goTo(this.current - 1);
+                    break;
+                case 'Home':
+                    e.preventDefault();
+                    this.goTo(0);
+                    break;
+                case 'End':
+                    e.preventDefault();
+                    this.goTo(this.total - 1);
+                    break;
+            }
+        });
+    }
+
+    bindWheel() {
+        // Throttle mouse wheel so a single flick advances exactly one slide.
+        let lastWheel = 0;
+        document.addEventListener('wheel', (e) => {
+            const now = Date.now();
+            if (now - lastWheel < 700) return;
+            if (Math.abs(e.deltaY) < 25) return;
+            lastWheel = now;
+            this.goTo(this.current + (e.deltaY > 0 ? 1 : -1));
+        }, { passive: true });
+    }
+
+    bindTouch() {
+        let startY = null;
+        document.addEventListener('touchstart', (e) => {
+            startY = e.touches[0].clientY;
+        }, { passive: true });
+        document.addEventListener('touchend', (e) => {
+            if (startY === null) return;
+            const dy = startY - e.changedTouches[0].clientY;
+            if (Math.abs(dy) < 50) return;
+            this.goTo(this.current + (dy > 0 ? 1 : -1));
+            startY = null;
+        }, { passive: true });
+    }
+
+    bindObserver() {
+        // Reveal-on-enter for staggered animations within each slide.
+        const obs = new IntersectionObserver((entries) => {
+            entries.forEach((entry) => {
+                if (!entry.isIntersecting) return;
+                const slide = entry.target;
+                slide.querySelectorAll('.reveal').forEach((el) => el.classList.add('in'));
+                // Track current slide via observer too (handles scroll outside keyboard).
+                const idx = this.slides.indexOf(slide);
+                if (idx >= 0 && idx !== this.current) {
+                    this.current = idx;
+                    this.update();
+                }
+            });
+        }, { threshold: 0.4 });
+        this.slides.forEach((s) => obs.observe(s));
+    }
+}
+
+document.addEventListener('DOMContentLoaded', () => new Presentation());
+</script>
+
+</body>
+</html>
