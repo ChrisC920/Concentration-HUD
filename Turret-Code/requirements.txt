@@ -1,0 +1,6 @@
+rpi-hardware-pwm>=0.2.1
+numpy>=1.24
+readchar>=4.0
+# Pi-only (do not install on dev machine):
+# picamera2
+# Hailo runtime is installed system-wide per Raspberry Pi's official guide.
