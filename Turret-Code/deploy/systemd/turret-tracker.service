@@ -1,0 +1,16 @@
+[Unit]
+Description=Turret Face Tracker
+After=network-online.target
+Wants=network-online.target
+
+[Service]
+Type=simple
+User=root
+WorkingDirectory=__PROJECT_DIR__
+ExecStart=__VENV_PYTHON__ __PROJECT_DIR__/src/tracker.py
+Restart=always
+RestartSec=2
+Environment=PYTHONUNBUFFERED=1
+
+[Install]
+WantedBy=multi-user.target

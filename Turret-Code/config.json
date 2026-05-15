@@ -1,0 +1,59 @@
+{
+  "pan": {
+    "gpio": 12,
+    "min_angle": 0,
+    "max_angle": 70,
+    "center": 35
+  },
+  "tilt": {
+    "gpio": 13,
+    "min_angle": 70,
+    "max_angle": 140,
+    "center": 105
+  },
+  "servo": {
+    "min_us": 500,
+    "max_us": 2500,
+    "freq_hz": 50
+  },
+  "camera": {
+    "width_px": 720,
+    "height_px": 1280,
+    "hfov_deg": 41,
+    "vfov_deg": 66,
+    "focal_px": 880,
+    "mirror_horizontal": true,
+    "_comment": "Frame is captured 1280x720 by picamera2 then rotated 90\u00b0 CW in face_source.py, so width/height are swapped here. HFOV/VFOV likewise swapped vs the Pi cam native landscape FOV. focal_px placeholder = width_px / (2*tan(hfov/2)); recalibrate with a known face width at a known distance: focal_px = bbox_width_px * distance_m / real_width_m."
+  },
+  "mount": {
+    "camera_height_above_pivot_m": 0.05,
+    "camera_forward_offset_m": 0,
+    "_comment": "Measure on the assembled turret. height = how far above the tilt pivot the camera lens sits; forward = how far ahead of the pivot."
+  },
+  "tracker": {
+    "real_face_width_m": 0.16,
+    "pan_p_gain": 0.2,
+    "tilt_smoothing_alpha": 0.15,
+    "max_servo_step_deg": 2,
+    "deadband_deg": 3,
+    "lost_face_hold_s": 0.5,
+    "lost_face_recenter_s": 5
+  },
+  "display": {
+    "show_window": true
+  },
+  "sound": {
+    "play_duration_s": 5,
+    "_comment": "Maximum number of seconds to play the shoot sound. Set to 0 or null to let the whole file play."
+  },
+  "web": {
+    "camera_stream": {
+      "enabled": true,
+      "width_px": 360,
+      "height_px": 640,
+      "fps": 8,
+      "jpeg_quality": 70,
+      "_comment": "MJPEG stream served at /api/camera/stream when enabled. Lower fps/quality/size uses less CPU and network."
+    }
+  }
+}

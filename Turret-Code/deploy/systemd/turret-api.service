@@ -1,0 +1,19 @@
+[Unit]
+Description=Turret Local API
+After=network-online.target
+Wants=network-online.target
+
+[Service]
+Type=simple
+User=__APP_USER__
+WorkingDirectory=__PROJECT_DIR__
+ExecStart=__VENV_PYTHON__ __PROJECT_DIR__/src/api_server.py
+Restart=always
+RestartSec=2
+Environment=PYTHONUNBUFFERED=1
+Environment=TURRET_API_HOST=0.0.0.0
+Environment=TURRET_API_PORT=8787
+Environment=XDG_RUNTIME_DIR=/run/user/__APP_UID__
+
+[Install]
+WantedBy=multi-user.target
